@@ -1,20 +1,10 @@
-import type {
-	LiteralUnion,
-	SignInOptions,
-	SignInAuthorizationParams,
-	SignOutParams,
-} from 'next-auth/react'
 import type { BuiltInProviderType, RedirectableProviderType } from '@auth/core/providers'
-
-interface AstroSignInOptions extends SignInOptions {
-	/** The base path for authentication (default: /api/auth) */
-	prefix?: string
-}
-
-interface AstroSignOutParams extends SignOutParams {
-	/** The base path for authentication (default: /api/auth) */
-	prefix?: string
-}
+import type {
+	SignInAuthorizationParams,
+	LiteralUnion,
+	AstroSignInOptions,
+	AstroSignOutParams,
+} from './src/types.ts'
 
 /**
  * Client-side method to initiate a signin flow
