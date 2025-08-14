@@ -1,9 +1,9 @@
 ---
 import type { HTMLAttributes } from 'astro/types'
-import type { SignOutParams } from 'next-auth/react/types'
+import type { SignOutParams } from '../types.js'
 
 interface Props extends HTMLAttributes<'button'> {
-	params?: SignOutParams<true>
+	params?: SignOutParams
 }
 
 const key = Math.random().toString(36).slice(2, 11)
