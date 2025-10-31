@@ -1,10 +1,10 @@
 ---
 import type { HTMLAttributes } from 'astro/types'
-import type { BuiltInProviderType, SignInOptions, SignInAuthorizationParams } from '../types.js'
+import type { BuiltInProviders, SignInOptions, SignInAuthorizationParams } from '../types.js'
 
 interface Props extends HTMLAttributes<'button'> {
 	/** The authentication provider to sign in with. */
-	provider?: BuiltInProviderType | string
+	provider?: BuiltInProviders | string
 	options?: SignInOptions
 	authParams?: SignInAuthorizationParams
 }

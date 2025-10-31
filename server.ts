@@ -83,7 +83,6 @@ function AstroAuthHandler(prefix: string, options = authConfig) {
  * @returns An object with `GET` and `POST` methods that can be exported in an Astro endpoint.
  */
 export function AstroAuth(options = authConfig) {
-	// @ts-ignore
 	const { AUTH_SECRET, AUTH_TRUST_HOST, VERCEL, NODE_ENV } = import.meta.env
 
 	options.secret ??= AUTH_SECRET
@@ -108,7 +107,6 @@ export function AstroAuth(options = authConfig) {
  * @returns The current session, or `null` if there is no session.
  */
 export async function getSession(req: Request, options = authConfig): Promise<Session | null> {
-	// @ts-ignore
 	options.secret ??= import.meta.env.AUTH_SECRET
 	options.trustHost ??= true
 

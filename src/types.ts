@@ -5,14 +5,12 @@
  * while working with @auth/core
  */
 
-export type { BuiltInProviderType, RedirectableProviderType } from '@auth/core/providers'
-
+export type { BuiltInProviders } from '@auth/core/providers'
 export type LiteralUnion<T extends U, U = string> = T | (U & Record<never, never>)
 
 export interface SignInOptions {
 	callbackUrl?: string
 	redirect?: boolean
-	[key: string]: any
 }
 
 export interface SignInAuthorizationParams {
