@@ -27,7 +27,7 @@ import { Auth, createActionURL, setEnvDefaults } from '@auth/core';
 import type { AuthAction } from '@auth/core/types';
 import type { APIContext } from 'astro';
 import authConfig from 'auth:config';
-import type { AstroAuthConfig, GetSessionResult } from './types.ts';
+import type { AstroAuthConfig, GetSessionResult } from './types';
 import type Cookie from 'cookie';
 
 function AstroAuthHandler(prefix: string, options = authConfig) {

@@ -3,7 +3,7 @@ import type {
   AstroSignOutParams,
   LiteralUnion,
   SignInAuthorizationParams,
-} from './types.ts';
+} from './types';
 
 /**
  * Retrieves a CSRF token from the authentication endpoint.
