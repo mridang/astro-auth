@@ -78,9 +78,6 @@
     "ts-jest": "29.4.0",
     "typescript": "^5.9.3"
   },
-  "dependencies": {
-    "@auth/core": ">=0.40.0"
-  },
   "keywords": [
     "astro",
     "auth",
