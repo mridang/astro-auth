@@ -6,7 +6,7 @@ import type { AuthConfig } from '@auth/core/types';
  *
  * @public
  */
-export interface AstroAuthConfig {
+export interface AstroIntegrationOptions {
   /**
    * Base path for authentication routes.
    *
@@ -50,7 +50,7 @@ export interface AstroAuthConfig {
  * @public
  */
 export interface FullAuthConfig
-  extends AstroAuthConfig,
+  extends AstroIntegrationOptions,
     Omit<AuthConfig, 'raw'> {}
 
 /**

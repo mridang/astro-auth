@@ -10,7 +10,7 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "paths": {
-      "auth:config": ["src/module.d.ts"]
+      "auth:config": ["./src/module.d.ts"]
     }
   },
   "include": ["src/**/*"],

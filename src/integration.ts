@@ -1,6 +1,5 @@
 import type { AstroIntegration } from 'astro';
-import { dirname, join } from 'node:path';
-import { type AstroAuthConfig, virtualConfigModule } from './config';
+import { type AstroIntegrationOptions, virtualConfigModule } from './config';
 import { fileURLToPath } from 'node:url';
 
 /**
@@ -21,14 +20,13 @@ import { fileURLToPath } from 'node:url';
  *
  * @public
  */
-export default (config: AstroAuthConfig = {}): AstroIntegration => ({
+export default (config: AstroIntegrationOptions = {}): AstroIntegration => ({
   name: 'astro-auth',
   hooks: {
     'astro:config:setup': async ({
       config: astroConfig,
       injectRoute,
       updateConfig,
-      logger,
     }) => {
       // Configure Vite to handle the virtual auth config module
       updateConfig({
