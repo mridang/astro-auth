@@ -61,7 +61,7 @@ export interface FullAuthConfig
  *
  * @example
  * ```ts
- * import { defineConfig } from 'auth-astro'
+ * import { defineConfig } from 'astro-auth'
  * import GitHub from '@auth/core/providers/github'
  *
  * export default defineConfig({
@@ -107,7 +107,7 @@ export const virtualConfigModule = (
   const resolvedId = '\0' + virtualModuleId;
 
   return {
-    name: 'auth-astro-config',
+    name: 'astro-auth-config',
     resolveId: (id) => {
       if (id === virtualModuleId) {
         return resolvedId;

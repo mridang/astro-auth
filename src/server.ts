@@ -1,6 +1,6 @@
 /**
  * > **caution**
- * > `auth-astro` is currently experimental. Be aware of breaking changes between versions.
+ * > `astro-auth` is currently experimental. Be aware of breaking changes between versions.
  *
  *
  * Astro Auth is the unofficial Astro integration for Auth.js.
@@ -8,7 +8,7 @@
  *
  * ## Installation
  *
- * `auth-astro` requires building your site in `server` mode with a platform adaper like `@astrojs/node`.
+ * `astro-auth` requires building your site in `server` mode with a platform adaper like `@astrojs/node`.
  * ```js
  * // astro.config.mjs
  * export default defineConfig({

@@ -1,5 +1,5 @@
 {
-  "name": "auth-astro",
+  "name": "astro-auth",
   "description": "The easiest way to add authentication to your Astro project!",
   "version": "4.2.0",
   "type": "module",
@@ -28,7 +28,7 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mridang/auth-astro.git"
+    "url": "https://github.com/mridang/astro-auth.git"
   },
   "author": {
     "name": "Mridang Agarwalla",
@@ -94,8 +94,8 @@
     "withastro"
   ],
   "private": false,
-  "homepage": "https://github.com/mridang/auth-astro",
-  "bugs": "https://github.com/mridang/auth-astro/issues",
+  "homepage": "https://github.com/mridang/astro-auth",
+  "bugs": "https://github.com/mridang/astro-auth/issues",
   "publishConfig": {
     "access": "public"
   }

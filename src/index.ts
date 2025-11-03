@@ -10,7 +10,7 @@
  * ```js
  * // astro.config.mjs
  * import { defineConfig } from 'astro/config'
- * import authAstro from 'auth-astro'
+ * import authAstro from 'astro-auth'
  *
  * export default defineConfig({
  *   output: 'server',
@@ -21,7 +21,7 @@
  * @example With Configuration
  * ```js
  * // astro.config.mjs
- * import authAstro from 'auth-astro'
+ * import authAstro from 'astro-auth'
  *
  * export default defineConfig({
  *   integrations: [
@@ -36,7 +36,7 @@
  * @example Creating Auth Configuration
  * ```ts
  * // auth.config.ts
- * import { defineConfig } from 'auth-astro'
+ * import { defineConfig } from 'astro-auth'
  * import GitHub from '@auth/core/providers/github'
  *
  * export default defineConfig({
@@ -53,7 +53,7 @@
  * @example Using Components
  * ```astro
  * ---
- * import { SignIn, SignOut, Auth } from 'auth-astro'
+ * import { SignIn, SignOut, Auth } from 'astro-auth'
  * ---
  *
  * <Auth>

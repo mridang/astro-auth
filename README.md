@@ -7,10 +7,10 @@ Auth Astro is the easiest way to add Authentication to your Astro Project. It wr
 
 # Installation
 
-The easiest way to get started is adding this package using the astro cli. 
+The easiest way to get started is adding this package using the astro cli.
 
 ```bash
-npm run astro add auth-astro
+npm run astro add astro-auth
 ```
 This will install the package and required peer-dependencies and add the integration to your config.
 You can now jump to [configuration](#configuration)
@@ -18,9 +18,9 @@ You can now jump to [configuration](#configuration)
 Alternatively, you can install the required packages on your own.
 
 ```bash
-npm install auth-astro@latest @auth/core@^0.18.6
+npm install astro-auth@latest @auth/core@^0.18.6
 ```
-> [!NOTE]  
+> [!NOTE]
 > If you´re using `pnpm` you must also install cookie: `pnpm i cookie`
 
 
@@ -33,7 +33,7 @@ Create your [auth configuration](https://authjs.dev/getting-started/providers/oa
 ```ts title="auth.config.ts"
 // auth.config.ts
 import GitHub from '@auth/core/providers/github'
-import { defineConfig } from 'auth-astro'
+import { defineConfig } from 'astro-auth'
 
 export default defineConfig({
 	providers: [
@@ -104,20 +104,20 @@ The `signIn` and `signOut` methods can be imported dynamically in an inline scri
   <button id="logout">Logout</button>
 
   <script>
-    const { signIn, signOut } = await import("auth-astro/client")
+    const { signIn, signOut } = await import("astro-auth/client")
     document.querySelector("#login").onclick = () => signIn("github")
     document.querySelector("#logout").onclick = () => signOut()
   </script>
 </body>
 </html>
 ```
-### With auth-astro's Components
+### With astro-auth's Components
 
-Alternatively, you can use the `SignIn` and `SignOut` button components provided by `auth-astro/components` importing them into your Astro [component's script](https://docs.astro.build/en/core-concepts/astro-components/#the-component-script) 
+Alternatively, you can use the `SignIn` and `SignOut` button components provided by `astro-auth/components` importing them into your Astro [component's script](https://docs.astro.build/en/core-concepts/astro-components/#the-component-script)
 
 ```jsx
 ---
-import { SignIn, SignOut } from 'auth-astro/components'
+import { SignIn, SignOut } from 'astro-auth/components'
 ---
 <html>
   <body>
@@ -137,7 +137,7 @@ You can fetch the session in one of two ways. The `getSession` method can be use
 
 ```tsx title="src/pages/index.astro"
 ---
-import { getSession } from 'auth-astro/server';
+import { getSession } from 'astro-auth/server';
 
 const session = await getSession(Astro.request)
 ---
@@ -154,11 +154,11 @@ Alternatively, you can use the `Auth` component to fetch the session using a ren
 ```tsx title="src/pages/index.astro"
 ---
 import type { Session } from '@auth/core/types';
-import { Auth, SignIn, SignOut } from 'auth-astro/components';
+import { Auth, SignIn, SignOut } from 'astro-auth/components';
 ---
 <Auth>
-  {(session: Session) => 
-    {session ? 
+  {(session: Session) =>
+    {session ?
       <SignOut>Logout</SignOut>
     :
       <SignIn provider="github">Login</SignIn>
@@ -173,7 +173,7 @@ import { Auth, SignIn, SignOut } from 'auth-astro/components';
 
 # State of Project
 
-We currently are waiting for the [PR](https://github.com/nextauthjs/next-auth/pull/9856) in the official [next-auth](https://github.com/nextauthjs/next-auth/) repository to be merged. Once this has happened, this package will be deprecated. 
+We currently are waiting for the [PR](https://github.com/nextauthjs/next-auth/pull/9856) in the official [next-auth](https://github.com/nextauthjs/next-auth/) repository to be merged. Once this has happened, this package will be deprecated.
 
 # Contribution
 Waiting on the PR to be merged means, we can still add new features to the PR, so, if you miss anything feel free to open a PR or issue in this repo, and we will try to get it added to the official package.

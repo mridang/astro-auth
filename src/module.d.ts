@@ -1,7 +1,7 @@
 // src/module.d.ts
 
 /**
- * Ambient module declarations for the auth-astro plugin.
+ * Ambient module declarations for the astro-auth plugin.
  *
  * This file declares TypeScript types for modules that exist at runtime
  * but are not standard TypeScript files, enabling proper type checking
