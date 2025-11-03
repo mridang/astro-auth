@@ -116,8 +116,8 @@ import { SignIn, SignOut } from '@mridang/astro-auth/components'
 <html>
   <body>
     ...
-    <SignIn provider="github" />
-    <SignOut />
+	<SignIn provider="github">Sign in with GitHub</SignIn>
+	<SignOut>Sign Out</SignOut>
     ...
   </body>
 </html>
