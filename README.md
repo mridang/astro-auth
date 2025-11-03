@@ -2,15 +2,12 @@
 
 Auth Astro is the easiest way to add Authentication to your Astro Project. It wraps the core of [Auth.js](https://authjs.dev/) into an Astro integration, which automatically adds the endpoints and handles everything else.
 
-#### Now supporting up to Astro 5
-(**disclaimer**: Please don't confuse this package with [astro-auth](https://github.com/astro-community/astro-auth))
-
 # Installation
 
 The easiest way to get started is adding this package using the astro cli.
 
 ```bash
-npm run astro add astro-auth
+npm run astro add @mridang/astro-auth
 ```
 This will install the package and required peer-dependencies and add the integration to your config.
 You can now jump to [configuration](#configuration)
@@ -18,11 +15,8 @@ You can now jump to [configuration](#configuration)
 Alternatively, you can install the required packages on your own.
 
 ```bash
-npm install astro-auth@latest @auth/core@^0.18.6
+npm install @auth/core @mridang/astro-auth
 ```
-> [!NOTE]
-> If you´re using `pnpm` you must also install cookie: `pnpm i cookie`
-
 
 Next, you need to [add the integration to your astro config](https://docs.astro.build/en/guides/integrations-guide/#using-integrations) by importing it and listing it in the integrations array.
 
@@ -33,7 +27,7 @@ Create your [auth configuration](https://authjs.dev/getting-started/providers/oa
 ```ts title="auth.config.ts"
 // auth.config.ts
 import GitHub from '@auth/core/providers/github'
-import { defineConfig } from 'astro-auth'
+import { defineConfig } from '@mridang/astro-auth'
 
 export default defineConfig({
 	providers: [
@@ -68,13 +62,13 @@ AUTH_TRUST_HOST=true
 Setting `AUTH_TRUST_HOST` is not needed, as we also check for an active Vercel environment.
 
 ### Requirements
-- Node version `>= 17.4`
-- Astro config set to output mode `server`
-- [SSR](https://docs.astro.build/en/guides/server-side-rendering/) enabled in your Astro project
+- Node version `>= 22`
+  - Astro config set to output mode `server`
+  - [SSR](https://docs.astro.build/en/guides/server-side-rendering/) enabled in your Astro project
 
 Resources:
 - [Enabling SSR in Your Project](https://docs.astro.build/en/guides/server-side-rendering/#enabling-ssr-in-your-project)
-- [Adding an Adapter](https://docs.astro.build/en/guides/server-side-rendering/#adding-an-adapter)
+  - [Adding an Adapter](https://docs.astro.build/en/guides/server-side-rendering/#adding-an-adapter)
 
 # Usage
 
@@ -104,7 +98,7 @@ The `signIn` and `signOut` methods can be imported dynamically in an inline scri
   <button id="logout">Logout</button>
 
   <script>
-    const { signIn, signOut } = await import("astro-auth/client")
+    const { signIn, signOut } = await import("@mridang/astro-auth/client")
     document.querySelector("#login").onclick = () => signIn("github")
     document.querySelector("#logout").onclick = () => signOut()
   </script>
@@ -113,11 +107,11 @@ The `signIn` and `signOut` methods can be imported dynamically in an inline scri
 ```
 ### With astro-auth's Components
 
-Alternatively, you can use the `SignIn` and `SignOut` button components provided by `astro-auth/components` importing them into your Astro [component's script](https://docs.astro.build/en/core-concepts/astro-components/#the-component-script)
+Alternatively, you can use the `SignIn` and `SignOut` button components provided by `@mridang/astro-auth/components` importing them into your Astro [component's script](https://docs.astro.build/en/core-concepts/astro-components/#the-component-script)
 
 ```jsx
 ---
-import { SignIn, SignOut } from 'astro-auth/components'
+import { SignIn, SignOut } from '@mridang/astro-auth/components'
 ---
 <html>
   <body>
@@ -137,7 +131,7 @@ You can fetch the session in one of two ways. The `getSession` method can be use
 
 ```tsx title="src/pages/index.astro"
 ---
-import { getSession } from 'astro-auth/server';
+import { getSession } from '@mridang/astro-auth/server';
 
 const session = await getSession(Astro.request)
 ---
@@ -154,7 +148,7 @@ Alternatively, you can use the `Auth` component to fetch the session using a ren
 ```tsx title="src/pages/index.astro"
 ---
 import type { Session } from '@auth/core/types';
-import { Auth, SignIn, SignOut } from 'astro-auth/components';
+import { Auth, SignIn, SignOut } from '@mridang/astro-auth/components';
 ---
 <Auth>
   {(session: Session) =>

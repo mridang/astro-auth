@@ -1,7 +1,7 @@
 {
-  "name": "astro-auth",
-  "description": "The easiest way to add authentication to your Astro project!",
-  "version": "4.2.0",
+  "name": "@mridang/astro-auth",
+  "description": "A comprehensive Auth.js integration for Astro applications with TypeScript support, framework-agnostic HTTP adapters, and role-based access control",
+  "version": "0.0.1",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
