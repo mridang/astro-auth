@@ -30,17 +30,6 @@ import authConfig from 'auth:config';
 import type { AstroAuthConfig, GetSessionResult } from './types.ts';
 import type Cookie from 'cookie';
 
-const actions: AuthAction[] = [
-  'providers',
-  'session',
-  'csrf',
-  'signin',
-  'signout',
-  'callback',
-  'verify-request',
-  'error',
-];
-
 function AstroAuthHandler(prefix: string, options = authConfig) {
   return async ({ cookies, request }: APIContext) => {
     const url = new URL(request.url);
@@ -48,8 +37,7 @@ function AstroAuthHandler(prefix: string, options = authConfig) {
       .slice(prefix.length + 1)
       .split('/')[0] as AuthAction;
 
-    if (!actions.includes(action) || !url.pathname.startsWith(prefix + '/'))
-      return;
+    if (!url.pathname.startsWith(prefix + '/')) return;
 
     const res = await Auth(request, options);
     if (['callback', 'signin', 'signout'].includes(action)) {
