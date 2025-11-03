@@ -27,27 +27,15 @@ import { Auth, createActionURL, setEnvDefaults } from '@auth/core';
 import type { APIContext } from 'astro';
 import authConfig from 'auth:config';
 import type { AstroAuthConfig, GetSessionResult } from './types';
-import type Cookie from 'cookie';
 
 function AstroAuthHandler(prefix: string, options = authConfig) {
-  return async ({ cookies, request }: APIContext) => {
+  return async ({ request }: APIContext) => {
     const url = new URL(request.url);
     if (!url.pathname.startsWith(prefix + '/')) {
       return;
     }
 
-    const res = await Auth(request, options);
-    // @ts-expect-error since it doesn't work
-    const setCookies = res.cookies;
-    if (setCookies && setCookies.length > 0) {
-      // @ts-expect-error since it doesn't work
-      res.cookies.forEach((cookie: Cookie) => {
-        const { name, value, options: authOptions } = cookie;
-        const { ...astroOptions } = authOptions;
-        cookies.set(name, value, astroOptions);
-      });
-    }
-    return res;
+    return await Auth(request, options);
   };
 }
 
