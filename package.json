@@ -9,6 +9,14 @@
 		".": {
 			"types": "./dist/index.d.ts",
 			"default": "./dist/index.js"
+		},
+		"./client": {
+			"types": "./dist/client.d.ts",
+			"default": "./dist/client.js"
+		},
+		"./server": {
+			"types": "./dist/server.d.ts",
+			"default": "./dist/server.js"
 		}
 	},
 	"files": [
@@ -51,7 +59,6 @@
 		"@semantic-release/github": "^12.0.0",
 		"@semantic-release/npm": "^13.1.1",
 		"@semantic-release/release-notes-generator": "^14.1.0",
-		"@types/jest": "30.0.0",
 		"@types/node": "^22.18.13",
 		"@typescript-eslint/parser": "^8.46.2",
 		"astro": "^5.0.0",
@@ -63,7 +70,9 @@
 		"prettier-plugin-astro": "^0.14.1",
 		"semantic-release": "^25.0.1",
 		"ts-jest": "29.4.0",
-		"typescript": "^5.9.3"
+		"typescript": "^5.9.3",
+		"@types/jest": "30.0.0",
+		"@jest/globals": "^30.0.5"
 	},
 	"dependencies": {
 		"@auth/core": ">=0.40.0"

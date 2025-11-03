@@ -50,10 +50,10 @@ function AstroAuthHandler(prefix: string, options = authConfig) {
 		const res = await Auth(request, options)
 		if (['callback', 'signin', 'signout'].includes(action)) {
 			// Properly handle multiple Set-Cookie headers (they can't be concatenated in one)
-			// @ts-ignore
+			// @ts-expect-error since it doesn't work
 			const getSetCookie = res.cookies
 			if (getSetCookie.length > 0) {
-				// @ts-ignore
+				// @ts-expect-error since it doesn't work
 				res.cookies.forEach((cookie: Cookie) => {
 					const { name, value, options: authOptions } = cookie
 					const { encode, ...astroOptions } = authOptions

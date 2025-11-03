@@ -1,4 +1,9 @@
-import type { AstroSignInOptions, AstroSignOutParams, LiteralUnion, SignInAuthorizationParams, } from './types.ts'
+import type {
+	AstroSignInOptions,
+	AstroSignOutParams,
+	LiteralUnion,
+	SignInAuthorizationParams,
+} from './types.ts'
 
 /**
  * Initiates a sign-in flow for the specified authentication provider.
@@ -76,7 +81,7 @@ export async function signIn<P extends string | undefined = undefined>(
 			prefix = options.prefix
 		}
 		// Extract non-prefix options
-		const { prefix: _, callbackUrl: __, redirect: ___, ...rest } = options
+		const { prefix: _prefix, callbackUrl: _callbackUrl, redirect: _redirect, ...rest } = options
 		Object.assign(opts, rest)
 	}
 
