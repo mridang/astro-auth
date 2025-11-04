@@ -4,7 +4,7 @@ import tsParser from '@typescript-eslint/parser';
 
 export default [
   {
-    ignores: ['README.md', 'README.md/**'],
+    ignores: ['README.md', 'README.md/**', 'src/components/index.d.ts'],
   },
   ...mridang.configs.recommended,
   ...eslintPluginAstro.configs.recommended,
@@ -13,7 +13,7 @@ export default [
     languageOptions: {
       parserOptions: {
         parser: '@typescript-eslint/parser',
-        project: './tsconfig.json',
+        project: null,
         extraFileExtensions: ['.astro'],
       },
     },
