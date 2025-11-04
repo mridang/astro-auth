@@ -60,8 +60,7 @@ attrs.class = `signin-button ${attrs.class ?? ''}`;
 <script>
   import { signIn } from '../client';
 
-  // Attach event listeners to all sign-in buttons
-  document.querySelectorAll('[data-signin-key]').forEach((button) => {
+  function initializeSignInButton(button: Element) {
     if (button instanceof HTMLElement && !button.dataset.signinInitialized) {
       button.dataset.signinInitialized = 'true';
 
@@ -77,5 +76,26 @@ attrs.class = `signin-button ${attrs.class ?? ''}`;
         signIn(provider, options, authParams);
       });
     }
+  }
+
+  document
+    .querySelectorAll('[data-signin-key]')
+    .forEach(initializeSignInButton);
+
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      mutation.addedNodes.forEach((node) => {
+        if (node instanceof HTMLElement) {
+          if (node.hasAttribute('data-signin-key')) {
+            initializeSignInButton(node);
+          }
+          node
+            .querySelectorAll('[data-signin-key]')
+            .forEach(initializeSignInButton);
+        }
+      });
+    });
   });
+
+  observer.observe(document.body, { childList: true, subtree: true });
 </script>

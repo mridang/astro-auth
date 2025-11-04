@@ -38,8 +38,7 @@ attrs.class = `signout-button ${attrs.class ?? ''}`;
 <script>
   import { signOut } from '../client';
 
-  // Attach event listeners to all sign-out buttons
-  document.querySelectorAll('[data-signout-key]').forEach((button) => {
+  function initializeSignOutButton(button: Element) {
     if (button instanceof HTMLElement && !button.dataset.signoutInitialized) {
       button.dataset.signoutInitialized = 'true';
 
@@ -51,5 +50,26 @@ attrs.class = `signout-button ${attrs.class ?? ''}`;
         signOut(params);
       });
     }
+  }
+
+  document
+    .querySelectorAll('[data-signout-key]')
+    .forEach(initializeSignOutButton);
+
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      mutation.addedNodes.forEach((node) => {
+        if (node instanceof HTMLElement) {
+          if (node.hasAttribute('data-signout-key')) {
+            initializeSignOutButton(node);
+          }
+          node
+            .querySelectorAll('[data-signout-key]')
+            .forEach(initializeSignOutButton);
+        }
+      });
+    });
   });
+
+  observer.observe(document.body, { childList: true, subtree: true });
 </script>
