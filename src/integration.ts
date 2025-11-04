@@ -42,7 +42,7 @@ export default (config: AstroIntegrationOptions = {}): AstroIntegration => ({
       // Inject authentication routes unless explicitly disabled
       if (config.injectEndpoints !== false) {
         const entrypoint = fileURLToPath(
-          new URL('./api/[...auth].ts', import.meta.url),
+          new URL('./api/[...auth].js', import.meta.url),
         );
 
         injectRoute({

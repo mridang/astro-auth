@@ -35,6 +35,7 @@ export default defineConfig({
     client: 'src/client.ts',
     server: 'src/server.ts',
     'components/index': 'src/components/index.ts',
+    'api/[...auth]': 'src/api/[...auth].ts',
   },
   external: ['auth:config'],
   format: ['esm'],
