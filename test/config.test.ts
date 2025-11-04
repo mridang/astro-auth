@@ -4,17 +4,21 @@ import { defineConfig, virtualConfigModule } from '../src/config';
 
 describe('Config Module', () => {
   describe('defineConfig', () => {
-    it('should return the config object unchanged when all values provided', () => {
+    it('should return the config object with all values when provided', () => {
       const config = {
         providers: [],
         secret: 'my-secret',
         prefix: '/custom-auth',
-        basePath: '/custom-auth',
+        trustHost: true,
       };
 
       const result = defineConfig(config);
 
-      expect(result).toEqual(config);
+      expect(result.providers).toEqual([]);
+      expect(result.secret).toBe('my-secret');
+      expect(result.prefix).toBe('/custom-auth');
+      expect(result.basePath).toBe('/custom-auth');
+      expect(result.trustHost).toBe(true);
     });
 
     it('should set default prefix when not provided', () => {
@@ -26,6 +30,7 @@ describe('Config Module', () => {
       const result = defineConfig(config);
 
       expect(result.prefix).toBe('/api/auth');
+      expect(result.basePath).toBe('/api/auth');
     });
 
     it('should set basePath to match prefix', () => {
@@ -53,16 +58,86 @@ describe('Config Module', () => {
       expect(result.basePath).toBe('/my-auth');
     });
 
-    it('should not override existing basePath with prefix', () => {
+    it('should use secret from config over environment', () => {
       const config = {
         providers: [],
-        secret: 'my-secret',
-        prefix: '/custom-auth',
+        secret: 'config-secret',
       };
 
-      const result = defineConfig(config);
+      const result = defineConfig(config, { AUTH_SECRET: 'env-secret' });
 
-      expect(result.basePath).toBe('/custom-auth');
+      expect(result.secret).toBe('config-secret');
+    });
+
+    it('should use secret from environment when not in config', () => {
+      const config = {
+        providers: [],
+      };
+
+      const result = defineConfig(config, { AUTH_SECRET: 'env-secret' });
+
+      expect(result.secret).toBe('env-secret');
+    });
+
+    it('should set trustHost from AUTH_TRUST_HOST env var', () => {
+      const config = {
+        providers: [],
+      };
+
+      const result = defineConfig(config, { AUTH_TRUST_HOST: 'true' });
+
+      expect(result.trustHost).toBe(true);
+    });
+
+    it('should set trustHost when VERCEL env var is present', () => {
+      const config = {
+        providers: [],
+      };
+
+      const result = defineConfig(config, { VERCEL: '1' });
+
+      expect(result.trustHost).toBe(true);
+    });
+
+    it('should set trustHost when CF_PAGES env var is present', () => {
+      const config = {
+        providers: [],
+      };
+
+      const result = defineConfig(config, { CF_PAGES: '1' });
+
+      expect(result.trustHost).toBe(true);
+    });
+
+    it('should set trustHost to true in non-production NODE_ENV', () => {
+      const config = {
+        providers: [],
+      };
+
+      const result = defineConfig(config, { NODE_ENV: 'development' });
+
+      expect(result.trustHost).toBe(true);
+    });
+
+    it('should not set trustHost in production NODE_ENV', () => {
+      const config = {
+        providers: [],
+      };
+
+      const result = defineConfig(config, { NODE_ENV: 'production' });
+
+      expect(result.trustHost).toBe(false);
+    });
+
+    it('should preserve trustHost from config over environment', () => {
+      const config = {
+        providers: [],
+        trustHost: false,
+      };
+
+      const result = defineConfig(config, { AUTH_TRUST_HOST: 'true' });
+
+      expect(result.trustHost).toBe(false);
     });
   });
 

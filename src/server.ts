@@ -58,15 +58,6 @@ function AstroAuthHandler(prefix: string, options = authConfig) {
  * @returns An object with `GET` and `POST` methods that can be exported in an Astro endpoint.
  */
 export function AstroAuth(options = authConfig) {
-  const { AUTH_SECRET, AUTH_TRUST_HOST, VERCEL, NODE_ENV } = import.meta.env;
-
-  options.secret ??= AUTH_SECRET;
-  options.trustHost ??= !!(
-    AUTH_TRUST_HOST ??
-    VERCEL ??
-    NODE_ENV !== 'production'
-  );
-
   const { prefix = '/api/auth', ...authOptions } = options;
 
   const handler = AstroAuthHandler(prefix, authOptions);

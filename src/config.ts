@@ -54,9 +54,88 @@ export interface FullAuthConfig
     Omit<AuthConfig, 'raw'> {}
 
 /**
+ * Environment variables structure used by Auth.js configuration.
+ *
+ * @internal
+ */
+export interface AuthEnvVars {
+  AUTH_SECRET?: string;
+  AUTH_TRUST_HOST?: string;
+  VERCEL?: string;
+  CF_PAGES?: string;
+  NODE_ENV?: string;
+}
+
+/**
+ * Retrieves environment variables from the runtime environment.
+ *
+ * This function provides a safe way to access Vite's `import.meta.env` object,
+ * which may not be available in all contexts (e.g., during Jest testing).
+ * By extracting this logic into a separate function with a parameter override,
+ * we enable easy testing while maintaining the same behavior in production.
+ *
+ * @param envOverride - Optional environment variables to use instead of import.meta.env
+ * @returns Object containing Auth.js-related environment variables
+ *
+ * @internal
+ *
+ * @remarks
+ * This function accepts an optional parameter for testing purposes. In production
+ * code, it reads from `import.meta.env`. In tests, callers can pass a mock
+ * environment object to control the values without complex mocking.
+ *
+ * @example Production usage
+ * ```ts
+ * const env = getEnvVars()
+ * console.log(env.AUTH_SECRET)
+ * ```
+ *
+ * @example Test usage
+ * ```ts
+ * const env = getEnvVars({ AUTH_SECRET: 'test-secret' })
+ * ```
+ */
+export const getEnvVars = (envOverride?: AuthEnvVars): AuthEnvVars => {
+  if (envOverride) {
+    return envOverride;
+  }
+
+  if (typeof import.meta !== 'undefined' && import.meta.env) {
+    const env = import.meta.env;
+    return {
+      AUTH_SECRET: env.AUTH_SECRET,
+      AUTH_TRUST_HOST: env.AUTH_TRUST_HOST,
+      VERCEL: env.VERCEL,
+      CF_PAGES: env.CF_PAGES,
+      NODE_ENV: env.NODE_ENV,
+    };
+  }
+
+  return {
+    AUTH_SECRET: undefined,
+    AUTH_TRUST_HOST: undefined,
+    VERCEL: undefined,
+    CF_PAGES: undefined,
+    NODE_ENV: undefined,
+  };
+};
+
+/**
  * Helper function to define authentication configuration with type safety.
  *
+ * This function applies default values and reads environment variables to
+ * provide a complete configuration object. Environment variables are only
+ * used as fallbacks when values are not explicitly provided in the config.
+ *
+ * Environment variables read (in order of precedence for `trustHost`):
+ * - `AUTH_SECRET`: Secret key for signing/encrypting tokens
+ * - `AUTH_TRUST_HOST`: Whether to trust the X-Forwarded-Host header
+ * - `VERCEL`: Automatically set by Vercel (enables trustHost)
+ * - `CF_PAGES`: Automatically set by Cloudflare Pages (enables trustHost)
+ * - `NODE_ENV`: Node environment (trustHost enabled if not 'production')
+ *
  * @param config - Authentication configuration object
+ * @param envOverride - Optional environment variables for testing
  * @returns Configuration with defaults applied
  *
  * @example
@@ -79,12 +158,23 @@ export interface FullAuthConfig
  */
 export const defineConfig = (
   config: Readonly<FullAuthConfig>,
+  envOverride?: AuthEnvVars,
 ): FullAuthConfig => {
+  const { AUTH_SECRET, AUTH_TRUST_HOST, VERCEL, CF_PAGES, NODE_ENV } =
+    getEnvVars(envOverride);
+
   const prefix = config.prefix ?? '/api/auth';
+  const secret = config.secret ?? AUTH_SECRET;
+  const trustHost =
+    config.trustHost ??
+    !!(AUTH_TRUST_HOST ?? VERCEL ?? CF_PAGES ?? NODE_ENV !== 'production');
+
   return {
     ...config,
     prefix,
     basePath: prefix,
+    secret,
+    trustHost,
   };
 };
 
