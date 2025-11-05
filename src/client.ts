@@ -18,12 +18,9 @@ async function __getCsrfToken(prefix: string): Promise<string> {
   if (!res.ok) {
     throw new Error(`Failed to fetch CSRF token (${res.status})`);
   }
-  let json: unknown;
-  try {
-    json = await res.json();
-  } catch {
+  const json: unknown = await res.json().catch(() => {
     throw new Error('CSRF endpoint returned non-JSON response');
-  }
+  });
   const token = (json as { csrfToken?: string })?.csrfToken;
   if (typeof token !== 'string' || token.length === 0) {
     throw new Error('Missing or invalid CSRF token');
@@ -66,53 +63,32 @@ export async function signIn<P extends string | undefined = undefined>(
   options?: AstroSignInOptions,
   authorizationParams?: SignInAuthorizationParams,
 ): Promise<Response | void> {
-  let callbackUrl = window.location.href;
-  let redirect = true;
+  const initialCallbackUrl = options?.callbackUrl ?? window.location.href;
+  const redirect = options?.redirect ?? true;
 
-  if (options) {
-    if (options.callbackUrl) {
-      callbackUrl = options.callbackUrl;
-    }
-    if (options.redirect !== undefined) {
-      redirect = options.redirect;
-    }
-  }
+  const callbackUrl = __normalizePathOnly(initialCallbackUrl);
 
-  callbackUrl = __normalizePathOnly(callbackUrl);
-
-  let prefix = '/api/auth';
-  const opts: Record<string, unknown> = {};
-
-  if (options) {
-    if (options.prefix) {
-      prefix = options.prefix;
-    }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { prefix: _, callbackUrl: __, redirect: ___, ...rest } = options;
-    Object.assign(opts, rest);
-  }
+  const prefix = options?.prefix ?? '/api/auth';
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { prefix: _p, callbackUrl: _c, redirect: _r, ...opts } = options ?? {};
 
   const isCredentials = providerId === 'credentials';
   const isEmail = providerId === 'email';
   const isSupportingReturn = isCredentials || isEmail;
 
-  let signInUrl: string;
-  if (isCredentials) {
-    signInUrl = `${prefix}/callback/${providerId}`;
-  } else {
-    signInUrl = `${prefix}/signin/${providerId}`;
-  }
+  const signInUrl = isCredentials
+    ? `${prefix}/callback/${providerId}`
+    : `${prefix}/signin/${providerId}`;
 
-  let signInUrlWithParams: string;
-  {
+  const signInUrlWithParams = (() => {
     const url = new URL(signInUrl, window.location.origin);
     if (authorizationParams) {
       for (const [k, v] of Object.entries(authorizationParams)) {
         url.searchParams.set(k, v);
       }
     }
-    signInUrlWithParams = url.pathname + url.search;
-  }
+    return url.pathname + url.search;
+  })();
 
   const csrfToken: string = await __getCsrfToken(prefix);
 
@@ -133,12 +109,10 @@ export async function signIn<P extends string | undefined = undefined>(
     }),
   });
 
-  let data: { url?: string } = {};
-  try {
-    data = await res.clone().json();
-  } catch {
-    // ignore non-JSON
-  }
+  const data: { url?: string } = await res
+    .clone()
+    .json()
+    .catch(() => ({}));
   const error = data.url ? new URL(data.url).searchParams.get('error') : null;
 
   if (redirect !== false || !isSupportingReturn || !error) {
@@ -156,19 +130,10 @@ export async function signIn<P extends string | undefined = undefined>(
 }
 
 export async function signOut(options?: AstroSignOutParams): Promise<void> {
-  let callbackUrl = window.location.href;
-  let prefix = '/api/auth';
+  const initialCallbackUrl = options?.callbackUrl ?? window.location.href;
+  const prefix = options?.prefix ?? '/api/auth';
 
-  if (options) {
-    if (options.callbackUrl) {
-      callbackUrl = options.callbackUrl;
-    }
-    if (options.prefix) {
-      prefix = options.prefix;
-    }
-  }
-
-  callbackUrl = __normalizePathOnly(callbackUrl);
+  const callbackUrl = __normalizePathOnly(initialCallbackUrl);
 
   const csrfToken: string = await __getCsrfToken(prefix);
 
@@ -188,12 +153,7 @@ export async function signOut(options?: AstroSignOutParams): Promise<void> {
     }),
   });
 
-  let data: { url?: string } = {};
-  try {
-    data = await res.json();
-  } catch {
-    // ignore non-JSON
-  }
+  const data: { url?: string } = await res.json().catch(() => ({}));
   const candidate = data.url ?? (res.redirected ? res.url : undefined);
   const url = __safeRedirect(candidate, callbackUrl);
 
