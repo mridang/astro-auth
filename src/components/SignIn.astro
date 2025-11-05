@@ -1,7 +1,7 @@
 ---
 import type { HTMLAttributes } from 'astro/types';
 import type {
-  BuiltInProviders,
+  BuiltInProviderType,
   SignInOptions,
   SignInAuthorizationParams,
 } from '../types';
@@ -19,7 +19,7 @@ interface Props extends HTMLAttributes<'button'> {
    * Can be a built-in provider (e.g., 'google', 'github') or a custom
    * provider identifier.
    */
-  provider?: BuiltInProviders | string;
+  provider?: BuiltInProviderType | string;
 
   /**
    * Additional options to pass to the signIn function.
@@ -64,20 +64,32 @@ attrs.class = `signin-button ${attrs.class ?? ''}`;
     if (button instanceof HTMLElement && !button.dataset.signinInitialized) {
       button.dataset.signinInitialized = 'true';
 
-      button.addEventListener('click', async () => {
+      button.addEventListener('click', () => {
+        const provider = button.dataset.signinProvider;
+
+        // Guard JSON parsing to prevent errors from malformed data
+        let options;
+        let authParams;
+
         try {
-          const provider = button.dataset.signinProvider;
-          const options = button.dataset.signinOptions
+          options = button.dataset.signinOptions
             ? JSON.parse(button.dataset.signinOptions)
             : undefined;
-          const authParams = button.dataset.signinAuthParams
+        } catch (e) {
+          console.warn('[astro-auth] Invalid signin options JSON:', e);
+          options = undefined;
+        }
+
+        try {
+          authParams = button.dataset.signinAuthParams
             ? JSON.parse(button.dataset.signinAuthParams)
             : undefined;
-
-          await signIn(provider, options, authParams);
-        } catch (error) {
-          console.error('Sign in failed:', error);
+        } catch (e) {
+          console.warn('[astro-auth] Invalid signin authParams JSON:', e);
+          authParams = undefined;
         }
+
+        signIn(provider, options, authParams);
       });
     }
   }
@@ -102,4 +114,16 @@ attrs.class = `signin-button ${attrs.class ?? ''}`;
   });
 
   observer.observe(document.body, { childList: true, subtree: true });
+
+  // Clean up observer when page becomes hidden or before unload
+  const cleanup = () => {
+    observer.disconnect();
+  };
+
+  window.addEventListener('beforeunload', cleanup);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      cleanup();
+    }
+  });
 </script>

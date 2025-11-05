@@ -32,6 +32,8 @@ import type { Session } from '@auth/core/types';
 function AstroAuthHandler(prefix: string, options = authConfig) {
   return async ({ request }: APIContext) => {
     const url = new URL(request.url);
+    // Only handle requests that match our prefix path
+    // Non-matching paths return undefined because this handler is mounted as [...auth]
     if (!url.pathname.startsWith(prefix + '/')) {
       return;
     }
@@ -112,11 +114,12 @@ export async function getSession(
     config,
   );
 
+  // Forward all headers (not just cookie) so Auth.js gets host, x-forwarded-*, etc.
+  const headers = new Headers(req.headers);
+
   const response = await Auth(
     new Request(url, {
-      headers: {
-        cookie: new Headers(req.headers).get('cookie') ?? '',
-      },
+      headers,
     }),
     config,
   );
@@ -129,6 +132,9 @@ export async function getSession(
   } else if (status === 200) {
     return data;
   } else {
-    throw new Error(data.message);
+    // Include status and payload in error for better debugging
+    throw new Error(
+      `[astro-auth] getSession failed: ${status} ${JSON.stringify(data)}`,
+    );
   }
 }

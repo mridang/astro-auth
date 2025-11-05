@@ -121,6 +121,22 @@ const getEnvVars = (envOverride?: AuthEnvVars): AuthEnvVars => {
 };
 
 /**
+ * Parses a string value as a boolean.
+ *
+ * Only treats explicit truthy values as true: "1", "true", "yes", "on" (case-insensitive).
+ * All other values including "0", "false", undefined, etc. return false.
+ *
+ * @param value - The string value to parse
+ * @returns true if the value is explicitly truthy, false otherwise
+ *
+ * @internal
+ */
+const parseBool = (value?: string): boolean => {
+  if (!value) return false;
+  return /^(1|true|yes|on)$/i.test(value);
+};
+
+/**
  * Helper function to define authentication configuration with type safety.
  *
  * This function applies default values and reads environment variables to
@@ -128,11 +144,15 @@ const getEnvVars = (envOverride?: AuthEnvVars): AuthEnvVars => {
  * used as fallbacks when values are not explicitly provided in the config.
  *
  * Environment variables read (in order of precedence for `trustHost`):
- * - `AUTH_SECRET`: Secret key for signing/encrypting tokens
- * - `AUTH_TRUST_HOST`: Whether to trust the X-Forwarded-Host header
- * - `VERCEL`: Automatically set by Vercel (enables trustHost)
- * - `CF_PAGES`: Automatically set by Cloudflare Pages (enables trustHost)
+ * - `config.trustHost`: Explicit config value (highest priority)
+ * - `AUTH_TRUST_HOST`: Whether to trust the X-Forwarded-Host header ("1"/"true"/"yes"/"on")
+ * - `VERCEL`: Automatically set by Vercel (any truthy value enables trustHost)
+ * - `CF_PAGES`: Automatically set by Cloudflare Pages (any truthy value enables trustHost)
  * - `NODE_ENV`: Node environment (trustHost enabled if not 'production')
+ *
+ * For `secret`:
+ * - `config.secret`: Explicit config value (highest priority)
+ * - `AUTH_SECRET`: Environment variable fallback
  *
  * @param config - Authentication configuration object
  * @param envOverride - Optional environment variables for testing
@@ -165,9 +185,15 @@ export const defineConfig = (
 
   const prefix = config.prefix ?? '/api/auth';
   const secret = config.secret ?? AUTH_SECRET;
+
+  // Parse trustHost with proper boolean handling
+  // Priority: explicit config > AUTH_TRUST_HOST > platform detection > NODE_ENV
   const trustHost =
     config.trustHost ??
-    !!(AUTH_TRUST_HOST ?? VERCEL ?? CF_PAGES ?? NODE_ENV !== 'production');
+    (parseBool(AUTH_TRUST_HOST) ||
+      parseBool(VERCEL) ||
+      parseBool(CF_PAGES) ||
+      NODE_ENV !== 'production');
 
   return {
     ...config,

@@ -42,16 +42,20 @@ attrs.class = `signout-button ${attrs.class ?? ''}`;
     if (button instanceof HTMLElement && !button.dataset.signoutInitialized) {
       button.dataset.signoutInitialized = 'true';
 
-      button.addEventListener('click', async () => {
+      button.addEventListener('click', () => {
+        // Guard JSON parsing to prevent errors from malformed data
+        let params;
+
         try {
-          const params = button.dataset.signoutParams
+          params = button.dataset.signoutParams
             ? JSON.parse(button.dataset.signoutParams)
             : undefined;
-
-          await signOut(params);
-        } catch (error) {
-          console.error('Sign out failed:', error);
+        } catch (e) {
+          console.warn('[astro-auth] Invalid signout params JSON:', e);
+          params = undefined;
         }
+
+        signOut(params);
       });
     }
   }
@@ -76,4 +80,16 @@ attrs.class = `signout-button ${attrs.class ?? ''}`;
   });
 
   observer.observe(document.body, { childList: true, subtree: true });
+
+  // Clean up observer when page becomes hidden or before unload
+  const cleanup = () => {
+    observer.disconnect();
+  };
+
+  window.addEventListener('beforeunload', cleanup);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      cleanup();
+    }
+  });
 </script>

@@ -28,6 +28,10 @@ let session = await getSession(Astro.request, authConfig);
 <!--
   Render the default slot with session data passed as an argument.
   This allows child components to access session information.
+
+  Note: Slots are rendered by Astro's template engine. User-provided
+  content is automatically escaped. Do not use set:html with user data
+  to prevent XSS vulnerabilities.
 -->
 <div>
   <Fragment set:html={Astro.slots.render('default', [session])} />
