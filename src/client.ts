@@ -47,6 +47,7 @@ export async function signIn<P extends string | undefined = undefined>(
     if (options.prefix) {
       prefix = options.prefix;
     }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { prefix: _, callbackUrl: __, redirect: ___, ...rest } = options;
     Object.assign(opts, rest);
   }
