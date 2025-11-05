@@ -1,3 +1,4 @@
+// file: src/types.ts
 import type { AuthConfig } from '@auth/core/types';
 
 /**

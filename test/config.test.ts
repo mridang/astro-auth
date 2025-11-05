@@ -1,6 +1,7 @@
 import { describe, expect, it } from '@jest/globals';
 import type { Plugin } from 'vite';
 import { defineConfig, virtualConfigModule } from '../src/config';
+import type { PluginContext } from 'rollup';
 
 describe('Config Module', () => {
   describe('defineConfig', () => {
@@ -151,20 +152,32 @@ describe('Config Module', () => {
       expect(plugin.name).toBe('astro-auth-config');
     });
 
-    it('should use default config file path when not provided', () => {
+    it('should use default config file path when not provided', async () => {
       const plugin = virtualConfigModule() as Plugin;
-      const loadFn = plugin.load as (id: string) => string | undefined;
+      const loadFn = plugin.load as (
+        this: PluginContext,
+        id: string,
+      ) => Promise<string | undefined>;
 
-      const result = loadFn('\0auth:config');
+      const result = await loadFn.call(
+        { resolve: async (p: string) => ({ id: p }) },
+        '\0auth:config',
+      );
 
       expect(result).toContain('./auth.config');
     });
 
-    it('should use custom config file path when provided', () => {
+    it('should use custom config file path when provided', async () => {
       const plugin = virtualConfigModule('./custom/auth.ts') as Plugin;
-      const loadFn = plugin.load as (id: string) => string | undefined;
+      const loadFn = plugin.load as (
+        this: PluginContext,
+        id: string,
+      ) => Promise<string | undefined>;
 
-      const result = loadFn('\0auth:config');
+      const result = await loadFn.call(
+        { resolve: async (p: string) => ({ id: p }) },
+        '\0auth:config',
+      );
 
       expect(result).toContain('./custom/auth.ts');
     });
@@ -191,22 +204,34 @@ describe('Config Module', () => {
       expect(result).toBeUndefined();
     });
 
-    it('should return import statement for virtual module', () => {
+    it('should return import statement for virtual module', async () => {
       const plugin = virtualConfigModule('./my-auth.config') as Plugin;
-      const loadFn = plugin.load as (id: string) => string | undefined;
+      const loadFn = plugin.load as (
+        this: PluginContext,
+        id: string,
+      ) => Promise<string | undefined>;
 
-      const result = loadFn('\0auth:config');
+      const result = await loadFn.call(
+        { resolve: async (p: string) => ({ id: p }) },
+        '\0auth:config',
+      );
 
       expect(result).toBe(
-        'import authConfig from "./my-auth.config"; export default authConfig',
+        'export { default as default } from "./my-auth.config";',
       );
     });
 
-    it('should not load non-virtual module IDs', () => {
+    it('should not load non-virtual module IDs', async () => {
       const plugin = virtualConfigModule() as Plugin;
-      const loadFn = plugin.load as (id: string) => string | undefined;
+      const loadFn = plugin.load as (
+        this: PluginContext,
+        id: string,
+      ) => Promise<string | undefined>;
 
-      const result = loadFn('some-other-id');
+      const result = await loadFn.call(
+        { resolve: async (p: string) => ({ id: p }) },
+        'some-other-id',
+      );
 
       expect(result).toBeUndefined();
     });

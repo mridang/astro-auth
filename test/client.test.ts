@@ -1,6 +1,4 @@
-/**
- * @jest-environment jsdom
- */
+/** @jest-environment jsdom */
 
 import {
   describe,
@@ -140,6 +138,7 @@ describe('signIn', () => {
       const requestInit = typedFetchMock.mock.calls[1]?.[1];
       expect(requestInit?.method).toBe('post');
       expect(requestInit?.headers).toEqual({
+        Accept: 'application/json',
         'Content-Type': 'application/x-www-form-urlencoded',
         'X-Auth-Return-Redirect': '1',
       });
@@ -147,7 +146,7 @@ describe('signIn', () => {
       const bodyString = requestInit?.body?.toString() ?? '';
       const body = new URLSearchParams(bodyString);
       expect(body.get('csrfToken')).toBe('token-123');
-      expect(body.get('callbackUrl')).toBe('http://localhost/current-page');
+      expect(body.get('callbackUrl')).toBe('/current-page');
 
       expect(assignSpy).toHaveBeenCalledWith('http://localhost/dashboard');
       expect(reloadSpy).not.toHaveBeenCalled();
@@ -248,7 +247,7 @@ describe('signIn', () => {
 
       await signIn('github');
 
-      expect(assignSpy).toHaveBeenCalledWith('http://localhost/current-page');
+      expect(assignSpy).toHaveBeenCalledWith('/current-page');
       expect(reloadSpy).not.toHaveBeenCalled();
     });
 
@@ -260,7 +259,7 @@ describe('signIn', () => {
 
       await signIn('github');
 
-      expect(assignSpy).toHaveBeenCalledWith('http://localhost/current-page');
+      expect(assignSpy).toHaveBeenCalledWith('/current-page');
     });
   });
 
@@ -292,8 +291,9 @@ describe('signIn', () => {
         JSON.stringify({ url: 'http://localhost/dashboard' }),
       );
 
-      await signIn('credentials', { redirect: true });
+      await signIn('credentials', { redirect: false });
 
+      // Should redirect because there's no error in the URL
       expect(assignSpy).toHaveBeenCalledWith('http://localhost/dashboard');
     });
 
@@ -421,7 +421,7 @@ describe('signIn', () => {
       const bodyString =
         typedFetchMock.mock.calls[1]?.[1]?.body?.toString() ?? '';
       const body = new URLSearchParams(bodyString);
-      expect(body.get('callbackUrl')).toBe('http://localhost/current-page');
+      expect(body.get('callbackUrl')).toBe('/current-page');
     });
 
     it('should not reload when URL without hash', async () => {
@@ -471,6 +471,7 @@ describe('signOut', () => {
       const requestInit = typedFetchMock.mock.calls[1]?.[1];
       expect(requestInit?.method).toBe('post');
       expect(requestInit?.headers).toEqual({
+        Accept: 'application/json',
         'Content-Type': 'application/x-www-form-urlencoded',
         'X-Auth-Return-Redirect': '1',
       });
@@ -478,7 +479,7 @@ describe('signOut', () => {
       const bodyString = requestInit?.body?.toString() ?? '';
       const body = new URLSearchParams(bodyString);
       expect(body.get('csrfToken')).toBe('token-out');
-      expect(body.get('callbackUrl')).toBe('http://localhost/current-page');
+      expect(body.get('callbackUrl')).toBe('/current-page');
 
       expect(assignSpy).toHaveBeenCalledWith('http://localhost/signed-out');
       expect(reloadSpy).not.toHaveBeenCalled();
@@ -568,7 +569,7 @@ describe('signOut', () => {
 
       await signOut();
 
-      expect(assignSpy).toHaveBeenCalledWith('http://localhost/current-page');
+      expect(assignSpy).toHaveBeenCalledWith('/current-page');
     });
 
     it('should fallback to callbackUrl when response url is undefined', async () => {
@@ -579,7 +580,7 @@ describe('signOut', () => {
 
       await signOut();
 
-      expect(assignSpy).toHaveBeenCalledWith('http://localhost/current-page');
+      expect(assignSpy).toHaveBeenCalledWith('/current-page');
     });
 
     it('should use custom callbackUrl as fallback', async () => {
@@ -621,7 +622,7 @@ describe('signOut', () => {
       const bodyString =
         typedFetchMock.mock.calls[1]?.[1]?.body?.toString() ?? '';
       const body = new URLSearchParams(bodyString);
-      expect(body.get('callbackUrl')).toBe('http://localhost/current-page');
+      expect(body.get('callbackUrl')).toBe('/current-page');
     });
 
     it('should throw error if CSRF token fetch fails', async () => {

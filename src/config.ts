@@ -229,9 +229,13 @@ export const virtualConfigModule = (
         return resolvedId;
       }
     },
-    load: (id) => {
+    load: async function (id) {
       if (id === resolvedId) {
-        return `import authConfig from "${configFile}"; export default authConfig`;
+        const resolved = await this.resolve(configFile);
+        if (!resolved) {
+          throw new Error(`[astro-auth] Cannot resolve ${configFile}`);
+        }
+        return `export { default as default } from ${JSON.stringify(resolved.id)};`;
       }
     },
   };
