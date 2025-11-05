@@ -9,7 +9,10 @@ async function __getCsrfToken(prefix: string): Promise<string> {
   const res = await fetch(`${prefix}/csrf`, {
     method: 'GET',
     credentials: 'same-origin',
-    headers: { Accept: 'application/json' },
+    headers: {
+      Accept: 'application/json',
+      'X-Requested-With': 'XMLHttpRequest',
+    },
     cache: 'no-store',
   });
   if (!res.ok) {

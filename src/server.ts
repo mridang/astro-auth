@@ -30,11 +30,12 @@ import type { AstroAuthConfig } from './types';
 import type { Session } from '@auth/core/types';
 
 function AstroAuthHandler(prefix: string, options = authConfig) {
+  const normalizedPrefix = prefix.endsWith('/') ? prefix.slice(0, -1) : prefix;
   return async ({ request }: APIContext) => {
     const url = new URL(request.url);
     // Only handle requests that match our prefix path
     // Non-matching paths return undefined because this handler is mounted as [...auth]
-    if (!url.pathname.startsWith(prefix + '/')) {
+    if (!url.pathname.startsWith(normalizedPrefix + '/')) {
       return;
     }
 
