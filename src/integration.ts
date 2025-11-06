@@ -29,27 +29,21 @@ export default (config: AstroIntegrationOptions = {}): AstroIntegration => ({
       injectRoute,
       updateConfig,
     }) => {
-      // Configure Vite to handle the virtual auth config module
       updateConfig({
         vite: {
           plugins: [virtualConfigModule(config.configFile)],
+          // IMPORTANT: never pre-bundle the virtual module
           optimizeDeps: { exclude: ['auth:config'] },
         },
       });
 
-      // Set default authentication endpoint prefix
       config.prefix ??= '/api/auth';
 
-      // Inject authentication routes unless explicitly disabled
       if (config.injectEndpoints !== false) {
         const entrypoint = fileURLToPath(
           new URL('./api/[...auth].js', import.meta.url),
         );
-
-        injectRoute({
-          pattern: `${config.prefix}/[...auth]`,
-          entrypoint,
-        });
+        injectRoute({ pattern: `${config.prefix}/[...auth]`, entrypoint });
       }
 
       if (!astroConfig.adapter) {

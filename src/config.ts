@@ -1,5 +1,6 @@
 import type { PluginOption } from 'vite';
 import type { AuthConfig } from '@auth/core/types';
+import type { PluginContext } from 'rollup';
 
 /**
  * Configuration options specific to the Astro integration.
@@ -98,10 +99,12 @@ export interface AuthEnvVars {
 const getEnvVars = (envOverride?: AuthEnvVars): AuthEnvVars => {
   if (envOverride) {
     return envOverride;
-  }
-
-  if (typeof import.meta !== 'undefined' && import.meta.env) {
-    const env = import.meta.env;
+  } else if (
+    typeof import.meta !== 'undefined' &&
+    (import.meta as { env: Record<string, string | undefined> }).env
+  ) {
+    const env = (import.meta as { env: Record<string, string | undefined> })
+      .env;
     return {
       AUTH_SECRET: env.AUTH_SECRET,
       AUTH_TRUST_HOST: env.AUTH_TRUST_HOST,
@@ -109,15 +112,15 @@ const getEnvVars = (envOverride?: AuthEnvVars): AuthEnvVars => {
       CF_PAGES: env.CF_PAGES,
       NODE_ENV: env.NODE_ENV,
     };
+  } else {
+    return {
+      AUTH_SECRET: undefined,
+      AUTH_TRUST_HOST: undefined,
+      VERCEL: undefined,
+      CF_PAGES: undefined,
+      NODE_ENV: undefined,
+    };
   }
-
-  return {
-    AUTH_SECRET: undefined,
-    AUTH_TRUST_HOST: undefined,
-    VERCEL: undefined,
-    CF_PAGES: undefined,
-    NODE_ENV: undefined,
-  };
 };
 
 /**
@@ -132,8 +135,11 @@ const getEnvVars = (envOverride?: AuthEnvVars): AuthEnvVars => {
  * @internal
  */
 const parseBool = (value?: string): boolean => {
-  if (!value) return false;
-  return /^(1|true|yes|on)$/i.test(value);
+  if (!value) {
+    return false;
+  } else {
+    return /^(1|true|yes|on)$/i.test(value);
+  }
 };
 
 /**
@@ -183,17 +189,31 @@ export const defineConfig = (
   const { AUTH_SECRET, AUTH_TRUST_HOST, VERCEL, CF_PAGES, NODE_ENV } =
     getEnvVars(envOverride);
 
-  const prefix = config.prefix ?? '/api/auth';
-  const secret = config.secret ?? AUTH_SECRET;
+  const prefix =
+    typeof config.prefix === 'string' && config.prefix.length > 0
+      ? config.prefix
+      : '/api/auth';
+  const secret =
+    typeof config.secret === 'string' && config.secret.length > 0
+      ? config.secret
+      : AUTH_SECRET;
 
-  // Parse trustHost with proper boolean handling
-  // Priority: explicit config > AUTH_TRUST_HOST > platform detection > NODE_ENV
-  const trustHost =
-    config.trustHost ??
-    (parseBool(AUTH_TRUST_HOST) ||
-      parseBool(VERCEL) ||
-      parseBool(CF_PAGES) ||
-      NODE_ENV !== 'production');
+  const hasExplicitTrustHost = Object.prototype.hasOwnProperty.call(
+    config,
+    'trustHost',
+  );
+  let trustHost: boolean;
+  if (hasExplicitTrustHost) {
+    trustHost = Boolean((config as { trustHost?: unknown }).trustHost);
+  } else if (parseBool(AUTH_TRUST_HOST)) {
+    trustHost = true;
+  } else if (parseBool(VERCEL)) {
+    trustHost = true;
+  } else if (parseBool(CF_PAGES)) {
+    trustHost = true;
+  } else {
+    trustHost = NODE_ENV !== 'production';
+  }
 
   return {
     ...config,
@@ -222,20 +242,58 @@ export const virtualConfigModule = (
   const virtualModuleId = 'auth:config';
   const resolvedId = '\0' + virtualModuleId;
 
+  const resolveConfig = async function (
+    this: PluginContext,
+  ): Promise<string | null> {
+    const r = await this.resolve(configFile);
+    if (r && r.id) {
+      return r.id;
+    } else {
+      return null;
+    }
+  };
+
   return {
     name: 'astro-auth-config',
+    enforce: 'pre',
     resolveId: (id) => {
       if (id === virtualModuleId) {
         return resolvedId;
+      } else {
+        return undefined;
       }
     },
     load: async function (id) {
       if (id === resolvedId) {
-        const resolved = await this.resolve(configFile);
-        if (!resolved) {
+        const cfg = await resolveConfig.call(this);
+        if (!cfg) {
           throw new Error(`[astro-auth] Cannot resolve ${configFile}`);
+        } else {
+          return `export { default as default } from ${JSON.stringify(cfg)};`;
         }
-        return `export { default as default } from ${JSON.stringify(resolved.id)};`;
+      } else {
+        return undefined;
+      }
+    },
+    buildStart: async function () {
+      const cfg = await resolveConfig.call(this);
+      if (cfg) {
+        this.addWatchFile(cfg);
+      }
+    },
+    handleHotUpdate: async function (ctx) {
+      const resolved = await ctx.server.pluginContainer.resolveId(configFile);
+      const configPath = resolved && resolved.id ? resolved.id : null;
+      if (configPath && ctx.file === configPath) {
+        const mod = ctx.server.moduleGraph.getModuleById(resolvedId);
+        if (mod) {
+          ctx.server.moduleGraph.invalidateModule(mod);
+        }
+        return [ctx.server.moduleGraph.getModuleById(configPath)!].filter(
+          Boolean,
+        );
+      } else {
+        return undefined;
       }
     },
   };
