@@ -32,7 +32,7 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mridang/astro-auth.git"
+    "url": "git+https://github.com/mridang/astro-auth.git"
   },
   "author": {
     "name": "Mridang Agarwalla",
