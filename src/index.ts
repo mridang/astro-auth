@@ -73,3 +73,4 @@
 export { default } from './integration';
 export { defineConfig } from './config';
 export type { FullAuthConfig } from './config';
+export type { AuthEnvVars, AstroIntegrationOptions } from './config';
