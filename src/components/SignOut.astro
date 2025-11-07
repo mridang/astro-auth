@@ -1,27 +1,99 @@
 ---
-import type { HTMLAttributes } from 'astro/types'
-import type { SignOutParams } from 'next-auth/react/types'
+import type { HTMLAttributes } from 'astro/types';
+import type { SignOutParams } from '../types.js';
 
+/**
+ * Props for the SignOut component.
+ *
+ * Extends standard HTML button attributes with authentication-specific
+ * options for configuring the sign-out behavior.
+ */
 interface Props extends HTMLAttributes<'button'> {
-	params?: SignOutParams<true>
+  /**
+   * Optional parameters to pass to the signOut function.
+   *
+   * These parameters control the sign-out behavior, such as redirect
+   * URLs and callback handling.
+   */
+  params?: SignOutParams;
 }
 
-const key = Math.random().toString(36).slice(2, 11)
+// Generate a unique identifier for this component instance to avoid
+// conflicts when multiple SignOut buttons are present on the same page
+const key = crypto.randomUUID();
 
-const { params, ...attrs } = Astro.props
-attrs.class = `signout-${key} ${attrs.class ?? ''}`
+// noinspection JSUnusedGlobalSymbols
+const { params, ...attrs } = Astro.props;
+attrs.class = `signout-button ${attrs.class ?? ''}`;
 ---
 
-<button {...attrs}>
-	<slot />
+<button
+  {...attrs}
+  data-signout-key={key}
+  data-signout-params={params ? JSON.stringify(params) : undefined}
+>
+  <slot />
 </button>
 
 <script>
-	import { signOut } from '../../client'
-	// @ts-ignore
-	window.signOut = signOut
-</script>
+  import { signOut } from '../client.js';
 
-<script define:vars={{ params, key }}>
-	document.querySelector(`.signout-${key}`)?.addEventListener('click', () => signOut(params))
+  function initializeSignOutButton(button: Element) {
+    if (button instanceof HTMLElement && !button.dataset.signoutInitialized) {
+      button.dataset.signoutInitialized = 'true';
+
+      button.addEventListener(
+        'click',
+        () => {
+          // Guard JSON parsing to prevent errors from malformed data
+          let params;
+
+          try {
+            params = button.dataset.signoutParams
+              ? JSON.parse(button.dataset.signoutParams)
+              : undefined;
+          } catch (e) {
+            console.warn('[astro-auth] Invalid signout params JSON:', e);
+            params = undefined;
+          }
+
+          signOut(params);
+        },
+        { passive: true, capture: true },
+      );
+    }
+  }
+
+  document
+    .querySelectorAll('[data-signout-key]')
+    .forEach(initializeSignOutButton);
+
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      mutation.addedNodes.forEach((node) => {
+        if (node instanceof HTMLElement) {
+          if (node.hasAttribute('data-signout-key')) {
+            initializeSignOutButton(node);
+          }
+          node
+            .querySelectorAll('[data-signout-key]')
+            .forEach(initializeSignOutButton);
+        }
+      });
+    });
+  });
+
+  observer.observe(document.body, { childList: true, subtree: true });
+
+  // Clean up observer when page becomes hidden or before unload
+  const cleanup = () => {
+    observer.disconnect();
+  };
+
+  window.addEventListener('beforeunload', cleanup);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      cleanup();
+    }
+  });
 </script>

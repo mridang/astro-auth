@@ -1,55 +1,56 @@
-import type { AstroIntegration } from 'astro'
-import { type AstroAuthConfig, virtualConfigModule } from './config'
-import { dirname, join } from 'node:path'
+import type { AstroIntegration } from 'astro';
+import { type AstroIntegrationOptions, virtualConfigModule } from './config.js';
+import { fileURLToPath } from 'node:url';
 
-export default (config: AstroAuthConfig = {}): AstroIntegration => ({
-	name: 'astro-auth',
-	hooks: {
-		'astro:config:setup': async ({
-			config: astroConfig,
-			injectRoute,
-			injectScript,
-			updateConfig,
-			logger,
-		}) => {
-			updateConfig({
-				vite: {
-					plugins: [virtualConfigModule(config.configFile)],
-					optimizeDeps: { exclude: ['auth:config'] },
-				},
-			})
+/**
+ * Creates an Astro integration for authentication using Auth.js.
+ *
+ * This integration handles:
+ * - Virtual module configuration for auth settings
+ * - Automatic route injection for authentication endpoints
+ * - Vite configuration for proper module resolution
+ *
+ * @param config - Configuration options for the integration
+ * @returns Configured Astro integration
+ * @throws {Error} When no adapter is configured (server-side rendering is required).
+ *
+ * @remarks
+ * This integration requires server-side rendering. Ensure you have
+ * configured an Astro adapter (e.g., `@astrojs/node`, `@astrojs/vercel`)
+ * in your Astro config.
+ *
+ * @public
+ */
+export default (config: AstroIntegrationOptions = {}): AstroIntegration => ({
+  name: 'astro-auth',
+  hooks: {
+    'astro:config:setup': async ({
+      config: astroConfig,
+      injectRoute,
+      updateConfig,
+    }) => {
+      updateConfig({
+        vite: {
+          plugins: [virtualConfigModule(config.configFile)],
+          // IMPORTANT: never pre-bundle the virtual module
+          optimizeDeps: { exclude: ['auth:config'] },
+        },
+      });
 
-			config.prefix ??= '/api/auth'
+      config.prefix ??= '/api/auth';
 
-			if (config.injectEndpoints !== false) {
-				const currentDir = dirname(import.meta.url.replace('file://', ''))
-				const entrypoint = join(`${currentDir}/api/[...auth].ts`)
-				injectRoute({
-					pattern: `${config.prefix}/[...auth]`,
-					entrypoint,
-				})
-			}
+      if (config.injectEndpoints !== false) {
+        const entrypoint = fileURLToPath(
+          new URL('./api/[...auth].js', import.meta.url),
+        );
+        injectRoute({ pattern: `${config.prefix}/[...auth]`, entrypoint });
+      }
 
-			if (!astroConfig.adapter) {
-				logger.error('No Adapter found, please make sure you provide one in your Astro config')
-			}
-			const edge = ['@astrojs/vercel/edge', '@astrojs/cloudflare'].includes(
-				astroConfig.adapter.name
-			)
-
-			if (
-				(!edge && globalThis.process && process.versions.node < '19.0.0') ||
-				(process.env.NODE_ENV === 'development' && edge)
-			) {
-				injectScript(
-					'page-ssr',
-					`import crypto from "node:crypto";
-if (!globalThis.crypto) globalThis.crypto = crypto;
-if (typeof globalThis.crypto.subtle === "undefined") globalThis.crypto.subtle = crypto.webcrypto.subtle;
-if (typeof globalThis.crypto.randomUUID === "undefined") globalThis.crypto.randomUUID = crypto.randomUUID;
-`
-				)
-			}
-		},
-	},
-})
+      if (!astroConfig.adapter) {
+        throw new Error(
+          'No adapter found. Authentication requires server-side rendering. Please add an adapter to your Astro config.',
+        );
+      }
+    },
+  },
+});

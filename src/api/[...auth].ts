@@ -1,5 +1,7 @@
-import { AstroAuth } from '../../server'
+/* istanbul ignore file */
+import { AstroAuth } from '../server.js';
 
-export const prerender = false
+// noinspection JSUnusedGlobalSymbols
+export const prerender = false;
 
-export const { GET, POST } = AstroAuth()
+export const { GET, POST } = AstroAuth();

@@ -1,33 +1,133 @@
 ---
-import type { HTMLAttributes } from 'astro/types'
-import type { BuiltInProviderType } from '@auth/core/providers'
-import type { LiteralUnion, SignInAuthorizationParams, SignInOptions } from 'next-auth/react/types'
+import type { HTMLAttributes } from 'astro/types';
+import type {
+  BuiltInProviders,
+  SignInOptions,
+  SignInAuthorizationParams,
+} from '../types.js';
 
+/**
+ * Props for the SignIn component.
+ *
+ * Extends standard HTML button attributes with authentication-specific
+ * options for configuring the sign-in behavior.
+ */
 interface Props extends HTMLAttributes<'button'> {
-	/** The authentication provider to sign in with. */
-	provider?: LiteralUnion<BuiltInProviderType, string>
-	options?: SignInOptions
-	authParams?: SignInAuthorizationParams
+  /**
+   * The authentication provider to sign in with.
+   *
+   * Can be a built-in provider (e.g., 'google', 'github') or a custom
+   * provider identifier.
+   */
+  provider?: BuiltInProviders | string;
+
+  /**
+   * Additional options to pass to the signIn function.
+   *
+   * These options control the sign-in behavior, such as redirect URLs
+   * and callback handling.
+   */
+  options?: SignInOptions;
+
+  /**
+   * Authorization parameters to pass to the authentication provider.
+   *
+   * These are provider-specific parameters that customize the
+   * authentication flow.
+   */
+  authParams?: SignInAuthorizationParams;
 }
 
-const key = Math.random().toString(36).slice(2, 11)
+// Generate a unique identifier for this component instance to avoid
+// conflicts when multiple SignIn buttons are present on the same page
+const key = crypto.randomUUID();
 
-const { provider, options, authParams, ...attrs } = Astro.props
-attrs.class = `signin-${key} ${attrs.class ?? ''}`
+// noinspection JSUnusedGlobalSymbols
+const { provider, options, authParams, ...attrs } = Astro.props;
+attrs.class = `signin-button ${attrs.class ?? ''}`;
 ---
 
-<button {...attrs}>
-	<slot />
+<button
+  {...attrs}
+  data-signin-key={key}
+  data-signin-provider={provider}
+  data-signin-options={options ? JSON.stringify(options) : undefined}
+  data-signin-auth-params={authParams ? JSON.stringify(authParams) : undefined}
+>
+  <slot />
 </button>
 
 <script>
-	import { signIn } from '../../client'
-	// @ts-ignore
-	window.signIn = signIn
-</script>
+  import { signIn } from '../client.js';
 
-<script define:vars={{ provider, options, authParams, key }}>
-	document
-		.querySelector(`.signin-${key}`)
-		?.addEventListener('click', () => signIn(provider, options, authParams))
+  function initializeSignInButton(button: Element) {
+    if (button instanceof HTMLElement && !button.dataset.signinInitialized) {
+      button.dataset.signinInitialized = 'true';
+
+      button.addEventListener(
+        'click',
+        () => {
+          const provider = button.dataset.signinProvider;
+
+          // Guard JSON parsing to prevent errors from malformed data
+          let options;
+          let authParams;
+
+          try {
+            options = button.dataset.signinOptions
+              ? JSON.parse(button.dataset.signinOptions)
+              : undefined;
+          } catch (e) {
+            console.warn('[astro-auth] Invalid signin options JSON:', e);
+            options = undefined;
+          }
+
+          try {
+            authParams = button.dataset.signinAuthParams
+              ? JSON.parse(button.dataset.signinAuthParams)
+              : undefined;
+          } catch (e) {
+            console.warn('[astro-auth] Invalid signin authParams JSON:', e);
+            authParams = undefined;
+          }
+
+          signIn(provider, options, authParams);
+        },
+        { passive: true, capture: true },
+      );
+    }
+  }
+
+  document
+    .querySelectorAll('[data-signin-key]')
+    .forEach(initializeSignInButton);
+
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      mutation.addedNodes.forEach((node) => {
+        if (node instanceof HTMLElement) {
+          if (node.hasAttribute('data-signin-key')) {
+            initializeSignInButton(node);
+          }
+          node
+            .querySelectorAll('[data-signin-key]')
+            .forEach(initializeSignInButton);
+        }
+      });
+    });
+  });
+
+  observer.observe(document.body, { childList: true, subtree: true });
+
+  // Clean up observer when page becomes hidden or before unload
+  const cleanup = () => {
+    observer.disconnect();
+  };
+
+  window.addEventListener('beforeunload', cleanup);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      cleanup();
+    }
+  });
 </script>
