@@ -1,180 +1,254 @@
-# Auth Astro
+# Astro Auth.js
 
-Auth Astro is the easiest way to add Authentication to your Astro Project. It wraps the core of [Auth.js](https://authjs.dev/) into an Astro integration, which automatically adds the endpoints and handles everything else.
+An [Astro](https://astro.build/) integration for [Auth.js](https://authjs.dev/)
+that provides seamless authentication with multiple providers, session
+management, and UI primitives that feel natural in Astro.
 
-# Installation
+This integration brings the power and flexibility of Auth.js to Astro
+applications with full TypeScript support, SSR-friendly HTTP handling,
+and Astro-native patterns including integrations, endpoints, and components.
 
-The easiest way to get started is adding this package using the astro cli.
+### Why?
 
-```bash
-npm run astro add @mridang/astro-auth
+Modern web applications require robust, secure, and flexible authentication
+systems. While Auth.js provides excellent authentication capabilities,
+integrating it with Astro applications requires careful consideration of
+framework patterns, server-side rendering, and TypeScript integration.
+
+However, a direct integration isn't always straightforward. Different types
+of applications or deployment scenarios might warrant different approaches:
+
+- **Framework Integration:** Auth.js operates at the HTTP level, while Astro
+  uses integrations, endpoints, and components. A proper integration should bridge this
+  gap by providing Astro-native primitives for authentication and authorization
+  while maintaining the full Auth.js ecosystem compatibility.
+- **HTTP Request Handling:** Astro’s server output and adapters (Node, Vercel, etc.)
+  require clean request handling and route injection. Teams need a unified approach that
+  maintains performance while providing seamless Auth.js integration.
+- **Session and Request Lifecycle:** Proper session handling in Astro requires
+  SSR-friendly utilities and components that work across server-rendered pages
+  and client interactions.
+- **Route Protection & UI:** Many applications need fine-grained authorization
+  beyond simple authentication. This calls for cohesive building blocks: server utilities,
+  client helpers, and drop-in UI components.
+
+This integration, `@mridang/astro-auth`, aims to provide the flexibility to
+handle such scenarios. It allows you to leverage the full Auth.js ecosystem
+while maintaining Astro best practices, ultimately leading to a more
+effective and less burdensome authentication implementation.
+
+## Installation
+
+Install using NPM by using the following command:
+
+```sh
+npm install @mridang/astro-auth @auth/core
 ```
-This will install the package and required peer-dependencies and add the integration to your config.
-You can now jump to [configuration](#configuration)
 
-Alternatively, you can install the required packages on your own.
+## Usage
 
-```bash
-npm install @auth/core @mridang/astro-auth
-```
+To use this integration, add the `@mridang/astro-auth` integration to your Astro application.
+The integration provides authentication infrastructure with configurable
+endpoints, SSR utilities, and components.
 
-Next, you need to [add the integration to your astro config](https://docs.astro.build/en/guides/integrations-guide/#using-integrations) by importing it and listing it in the integrations array.
+You'll need to configure it with your Auth.js providers and options. The
+integration will then be available throughout your application via Astro’s
+integration system.
 
-## Configuration
+First, add the integration to your Astro config:
 
-Create your [auth configuration](https://authjs.dev/getting-started/providers/oauth-tutorial) file in the root of your project.
-
-```ts title="auth.config.ts"
-// auth.config.ts
-import GitHub from '@auth/core/providers/github'
-import { defineConfig } from '@mridang/astro-auth'
+```ts
+// astro.config.mjs
+import { defineConfig } from 'astro/config';
+import authAstro from '@mridang/astro-auth';
 
 export default defineConfig({
-	providers: [
-		GitHub({
-			clientId: import.meta.env.GITHUB_CLIENT_ID,
-			clientSecret: import.meta.env.GITHUB_CLIENT_SECRET,
-		}),
-	],
-})
+  output: 'server',
+  integrations: [
+    authAstro({
+      // Optional:
+      // prefix: '/api/auth',
+      // configFile: './auth.config.ts'
+    }),
+  ],
+});
 ```
 
-Some OAuth Providers request a callback URL be submitted alongside requesting a Client ID, and Client Secret. The callback URL used by the providers must be set to the following, unless you override the prefix field in the configuration:
-
-```
-[origin]/api/auth/callback/[provider]
-
-// example
-// http://localhost:4321/api/auth/callback/github
-```
-
-### Setup Environment Variables
-
-Generate an auth secret by running `openssl rand -hex 32` in a local terminal or by visiting [generate-secret.vercel.app](https://generate-secret.vercel.app/32), copy the string, then set it as the `AUTH_SECRET` environment variable describe below.
-
-Next, set the `AUTH_TRUST_HOST` environment variable to `true` for hosting providers like Cloudflare Pages or Netlify.
-```sh
-AUTH_SECRET=<auth-secret>
-AUTH_TRUST_HOST=true
-```
-
-#### Deploying to Vercel?
-Setting `AUTH_TRUST_HOST` is not needed, as we also check for an active Vercel environment.
-
-### Requirements
-- Node version `>= 22`
-  - Astro config set to output mode `server`
-  - [SSR](https://docs.astro.build/en/guides/server-side-rendering/) enabled in your Astro project
-
-Resources:
-- [Enabling SSR in Your Project](https://docs.astro.build/en/guides/server-side-rendering/#enabling-ssr-in-your-project)
-  - [Adding an Adapter](https://docs.astro.build/en/guides/server-side-rendering/#adding-an-adapter)
-
-# Usage
-
-Your authentication endpoints now live under `[origin]/api/auth/[operation]`. You can change the prefix in the configuration.
-
-## Accessing your configuration
-
-In case you need to access your auth configuration, you can always import it by
 ```ts
-import authConfig from 'auth:config'
+// auth.config.ts
+import { defineConfig } from '@mridang/astro-auth';
+import Google from '@auth/core/providers/google';
+
+export default defineConfig({
+  providers: [
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    }),
+  ],
+  secret: process.env.AUTH_SECRET,
+  trustHost: true,
+});
 ```
 
-## Sign in & Sign out
+#### Using the Authentication System
 
-Astro Auth exposes two ways to sign in and out. Inline scripts and Astro Components.
+The integration provides several functions and hooks for handling
+authentication:
 
-### With Inline script tags
+**Functions and Hooks:**
 
-The `signIn` and `signOut` methods can be imported dynamically in an inline script.
+- `getSession(request, config?)`: Retrieves the current Auth.js session (SSR)
+- `<Auth>`: Render-prop component that provides the current session to children
+- `<SignIn provider="...">`: Drop-in button component for starting sign-in
+- `<SignOut>`: Drop-in button component for signing out
+- `signIn(provider, options?, authParams?)`: Client helper for programmatic sign-in
+- `signOut(options?)`: Client helper for programmatic sign-out
 
-```html
+**Basic Usage:**
+
+```astro
 ---
----
-<html>
-<body>
-  <button id="login">Login</button>
-  <button id="logout">Logout</button>
+// src/pages/index.astro
+import { getSession } from '@mridang/astro-auth/server';
+import type { Session } from '@auth/core/types';
 
-  <script>
-    const { signIn, signOut } = await import("@mridang/astro-auth/client")
-    document.querySelector("#login").onclick = () => signIn("github")
-    document.querySelector("#logout").onclick = () => signOut()
-  </script>
-</body>
-</html>
-```
-### With astro-auth's Components
-
-Alternatively, you can use the `SignIn` and `SignOut` button components provided by `@mridang/astro-auth/components` importing them into your Astro [component's script](https://docs.astro.build/en/core-concepts/astro-components/#the-component-script)
-
-```jsx
+const session = await getSession(Astro.request);
 ---
-import { SignIn, SignOut } from '@mridang/astro-auth/components'
----
+
 <html>
   <body>
-    ...
-	<SignIn provider="github">Sign in with GitHub</SignIn>
-	<SignOut>Sign Out</SignOut>
-    ...
+    {session ? (
+      <>
+        <p>Welcome {session.user?.name}</p>
+        <a href="/api/auth/signout">Sign out</a>
+      </>
+    ) : (
+      <a href="/api/auth/signin">Sign in</a>
+    )}
   </body>
 </html>
 ```
 
-## Fetching the session
+Prefer using components? Use the built-ins for a richer experience:
 
-You can fetch the session in one of two ways. The `getSession` method can be used in the component script section to fetch the session.
-
-### Within the component script section
-
-```tsx title="src/pages/index.astro"
+```astro
 ---
-import { getSession } from '@mridang/astro-auth/server';
-
-const session = await getSession(Astro.request)
----
-{session ? (
-  <p>Welcome {session.user?.name}</p>
-) : (
-  <p>Not logged in</p>
-)}
-```
-### Within the Auth component
-
-Alternatively, you can use the `Auth` component to fetch the session using a render prop.
-
-```tsx title="src/pages/index.astro"
----
+// src/pages/index.astro
 import type { Session } from '@auth/core/types';
 import { Auth, SignIn, SignOut } from '@mridang/astro-auth/components';
 ---
-<Auth>
-  {(session: Session) =>
-    {session ?
-      <SignOut>Logout</SignOut>
-    :
-      <SignIn provider="github">Login</SignIn>
-    }
 
-    <p>
-      {session ? `Logged in as ${session.user?.name}` : 'Not logged in'}
-    </p>
-  }
+<Auth>
+  {(session: Session | null) => (
+    <>
+      {session ? (
+        <>
+          <SignOut>Sign out</SignOut>
+          <p>Logged in as {session.user?.name}</p>
+        </>
+      ) : (
+        <SignIn provider="github">Sign in with GitHub</SignIn>
+      )}
+    </>
+  )}
 </Auth>
 ```
 
-# State of Project
+Prefer client helpers? Use inline script tags:
 
-We currently are waiting for the [PR](https://github.com/nextauthjs/next-auth/pull/9856) in the official [next-auth](https://github.com/nextauthjs/next-auth/) repository to be merged. Once this has happened, this package will be deprecated.
+```html
+---
+---
 
-# Contribution
-Waiting on the PR to be merged means, we can still add new features to the PR, so, if you miss anything feel free to open a PR or issue in this repo, and we will try to get it added to the official package.
+<html>
+  <body>
+    <button id="login">Login</button>
+    <button id="logout">Logout</button>
 
+    <script>
+      const { signIn, signOut } = await import("@mridang/astro-auth/client");
+      document.querySelector("#login").onclick = () => signIn("github");
+      document.querySelector("#logout").onclick = () => signOut();
+    </script>
+  </body>
+</html>
+```
 
+##### Example: Advanced Configuration with Multiple Providers
 
+This example shows how to use the integration with multiple Auth.js
+providers and custom session configuration:
 
-Document how to do module augmentation
-Document Vercel
-Document Cloudflare
+```ts
+// auth.config.ts
+import { defineConfig } from '@mridang/astro-auth';
+import Google from '@auth/core/providers/google';
+import GitHub from '@auth/core/providers/github';
+
+export default defineConfig({
+  providers: [
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    }),
+    GitHub({
+      clientId: process.env.GITHUB_CLIENT_ID,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET,
+    }),
+  ],
+  secret: process.env.AUTH_SECRET,
+  trustHost: true,
+  session: {
+    strategy: 'jwt',
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) (token as any).roles = (user as any).roles;
+      return token;
+    },
+    async session({ session, token }) {
+      (session.user as any).roles = (token as any).roles as
+        | string[]
+        | undefined;
+      return session;
+    },
+  },
+});
+```
+
+## Known Issues
+
+- **SSR & Adapter Required:** The integration requires Astro’s server output
+  with an adapter (e.g., `@astrojs/node`, Vercel, etc.). Ensure `output: 'server'`
+  is set and an adapter is configured in `astro.config.mjs`.
+- **Environment Configuration:** The integration relies on `AUTH_SECRET` and,
+  in many hosting scenarios, `AUTH_TRUST_HOST`. Ensure these are correctly set
+  in your environment for production.
+- **Callback URLs:** OAuth providers must be configured with the correct
+  callback URL: `[origin]/api/auth/callback/[provider]` (or your custom `prefix`).
+- **Type Augmentation:** If you attach additional properties (e.g., roles) to
+  the Auth.js user object, extend your app’s types accordingly so consumers of
+  `session.user` remain type-safe.
+- **Redirect Semantics:** OAuth providers expect real browser navigations during
+  sign-in. The client helpers handle this for you—avoid manual `fetch()` calls
+  to provider endpoints unless you know you need credential/email flows.
+
+## Useful links
+
+- **[Auth.js](https://authjs.dev/):** The authentication library that this
+  integration is built upon.
+- **[Astro](https://astro.build/):** The framework this integration targets.
+- **[Auth.js Providers](https://authjs.dev/getting-started/providers):**
+  Complete list of supported authentication providers.
+
+## Contributing
+
+If you have suggestions for how this integration could be improved, or
+want to report a bug, open an issue - we'd love all and any
+contributions.
+
+## License
+
+Apache-2.0
