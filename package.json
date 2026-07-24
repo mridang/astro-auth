@@ -75,7 +75,7 @@
     "@tsconfig/node22": "^22.0.2",
     "@types/jest": "^30.0.0",
     "@types/node": "^22.18.13",
-    "astro": "^6.0.0",
+    "astro": "^7.1.0",
     "eslint": "^9.39.1",
     "eslint-plugin-astro": "^1.4.0",
     "jest": "30.0.5",
